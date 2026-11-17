@@ -68,7 +68,13 @@ npm run build
 - 字段、状态、动作与流转目标集中在 `frontend/src/data/modules.ts`；示例数据在
   `frontend/src/data/seed.ts`。
 - 状态流转只允许在 `local-service.ts` 里改，页面组件不做业务判断。
-- 想回到初始数据：清掉浏览器里 `behavior-event-trace-hub:entries` 这一项，或调用 `resetModule(模块)`。
+- 路径分析与事件溯源的闭合判定、首份归因去重、版本冲突仲裁与复核数据流集中在
+  `frontend/src/domain/path-attribution.ts`（纯领域层，不直接操作页面）。
+- 想回到初始数据：清掉浏览器里 `behavior-event-trace-hub:entries` 与
+  `behavior-event-trace-hub:attributions` 两项，或调用 `resetModule(模块)`（重置路径分析/
+  事件溯源时会一并清空归因台账）。
+- 领域层回归：`node verify/path-attribution/verify-path-attribution.mjs`（复用前端工程的 esbuild，
+  不依赖浏览器）。
 
 领域：数据工程
 子方向：数据分析与数据应用

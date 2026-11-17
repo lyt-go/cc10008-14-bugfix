@@ -1,5 +1,15 @@
 import { MODULE_BY_KEY } from '@/data/modules'
-import { allRows, listRows, resetRows, saveRows } from '@/data/local-store'
+import {
+  allRows,
+  listRows,
+  resetRows,
+  saveRows,
+} from '@/data/local-store'
+import {
+  confirmChain,
+  confirmPath,
+  resetAttributionLedger,
+} from '@/domain/path-attribution'
 import type { ActionResult, EntryRow, ModuleMeta, OverviewResult, PageResult } from '@/data/types'
 
 // 会写进数据的「往回走」动作：命中就把这条记录标成异常态，看板上能一眼看出来。
@@ -40,9 +50,30 @@ export function runAction(key: string, id: number, action: string): ActionResult
     return { ok: false, message: `没有找到编号为 ${id} 的${meta.entity}` }
   }
   const current = String(rows[index].status)
+
+  // 路径链路领域闸门优先于通用「重复操作」判断：
+  // 确认动作先走闭合判定，未闭合链路一律拒绝且不覆盖历史完成率；
+  // 已确认链路仍可在此补登首份归因，重复回执由领域台账去重。
+  if (key === 'eventtrace' && action === '确认链路') {
+    const decision = confirmChain(id)
+    if (!decision.ok) {
+      return { ok: false, message: decision.message }
+    }
+    const receiptMessage = decision.receipt ? `；${decision.receipt.message}` : ''
+    return { ok: true, message: `${decision.message}${receiptMessage}` }
+  }
+  if (key === 'pathmap' && action === '确认模型') {
+    const decision = confirmPath(id)
+    if (!decision.ok) {
+      return { ok: false, message: decision.message }
+    }
+    return { ok: true, message: decision.message }
+  }
+
   if (current === target) {
     return { ok: false, message: `${meta.entity}已经是「${target}」，不用重复操作` }
   }
+
   const lastStatus = meta.statuses[meta.statuses.length - 1]
   const updated: EntryRow = {
     ...rows[index],
@@ -58,6 +89,10 @@ export function runAction(key: string, id: number, action: string): ActionResult
 
 export function resetModule(key: string): PageResult {
   resetRows(key)
+  // 重置路径分析或事件溯源时，归因首份台账一并清空，避免旧台账继续挡住新数据的首份写入。
+  if (key === 'pathmap' || key === 'eventtrace') {
+    resetAttributionLedger()
+  }
   return listEntries(key)
 }
 

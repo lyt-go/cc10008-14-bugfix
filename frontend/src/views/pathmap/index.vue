@@ -82,7 +82,7 @@ import {
 import type { EntryRow } from '@/data/types'
 
 const meta = moduleMeta('pathmap')
-const columns = ["模型编号", "起始页面", "终止页面", "中间路径", "访问用户量", "平均停留秒", "退出率", "转化事件"]
+const columns = ["模型编号", "起始页面", "终止页面", "中间路径", "访问用户量", "平均停留秒", "退出率", "转化事件", "首份归因链路"]
 const actions = ["发起分析", "确认模型", "归档模型"]
 const statuses = ["草稿", "分析中", "已确认", "已归档"]
 const stats = [{"label": "路径模型总数", "value": 0}, {"label": "已确认模型", "value": 0}, {"label": "分析中模型", "value": 0}]
